@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>FreeClass — Smart Room Finder</title>
+<style>
+:root{--bg:#f6f7fb;--card:#fff;--ink:#182033;--muted:#6b7280;--line:#e7e9f0;--blue:#4f46e5;--blue2:#eef2ff;--green:#16a34a;--green2:#ecfdf3;--orange:#d97706;--orange2:#fff7ed;--red:#dc2626;--shadow:0 10px 30px #17203312}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);font:14px Inter,system-ui,-apple-system,Segoe UI,sans-serif;color:var(--ink)}
+.app{display:flex;min-height:100vh}.side{width:235px;background:#111827;color:#fff;padding:24px 16px;position:fixed;inset:0 auto 0 0}.brand{font-size:24px;font-weight:900;padding:0 12px 28px}.brand span{color:#818cf8}.nav{display:grid;gap:7px}.nav button{border:0;background:transparent;color:#aeb7c9;text-align:left;padding:12px;border-radius:10px;cursor:pointer;font-weight:700}.nav button.active,.nav button:hover{background:#252e40;color:#fff}
+.main{margin-left:235px;width:calc(100% - 235px);padding:28px;max-width:1500px}.top{display:flex;justify-content:space-between;gap:20px;align-items:flex-start}.eyebrow{font-size:11px;font-weight:900;color:var(--blue);letter-spacing:.1em;text-transform:uppercase}.top h1{font-size:30px;margin:5px 0}.top p{color:var(--muted);margin:0}.clock{background:#fff;border:1px solid var(--line);padding:12px 15px;border-radius:12px;text-align:right;box-shadow:var(--shadow)}.clock b{display:block;font-size:18px}.clock span{color:var(--muted);font-size:11px}
+.ai{margin-top:24px;background:linear-gradient(135deg,#171c36,#29345d);color:#fff;border-radius:18px;padding:20px;box-shadow:var(--shadow)}.ai h2{margin:0 0 5px;font-size:18px}.ai p{margin:0 0 14px;color:#cdd4e8;font-size:13px}.search{display:flex;gap:9px}.search input{flex:1;border:0;border-radius:11px;padding:14px 15px;font-size:14px;outline:none}.search button,.primary{border:0;background:#818cf8;color:#fff;border-radius:11px;padding:0 18px;font-weight:900;cursor:pointer}.chips{display:flex;gap:7px;flex-wrap:wrap;margin-top:10px}.chip{border:1px solid #5b6686;background:#202a49;color:#dbe3ff;border-radius:99px;padding:7px 10px;cursor:pointer;font-size:11px}.ai-result{display:none;margin-top:13px;background:#fff;color:var(--ink);border-radius:12px;padding:13px}.ai-result.show{display:block}.ai-result strong{color:var(--blue)}.ai-room{display:inline-flex;margin:6px 5px 0 0;padding:7px 10px;border-radius:9px;background:var(--green2);color:#166534;font-weight:900}
+.controls{display:flex;gap:10px;flex-wrap:wrap;margin:22px 0 15px}.control{background:#fff;border:1px solid var(--line);border-radius:10px;padding:8px 10px}.control label{display:block;font-size:10px;color:var(--muted);font-weight:800;text-transform:uppercase;margin-bottom:3px}.control select,.control input{border:0;outline:0;font-weight:800;background:transparent}
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}.stat{background:#fff;border:1px solid var(--line);padding:15px;border-radius:13px}.stat small{color:var(--muted)}.stat b{display:block;font-size:24px;margin-top:3px}.green{color:var(--green)}.blue{color:var(--blue)}.orange{color:var(--orange)}
+.section-head{display:flex;justify-content:space-between;align-items:center;margin:25px 0 11px}.section-head h2{margin:0;font-size:18px}.section-head span{color:var(--muted);font-size:12px}
+.floor{margin-bottom:15px;background:#fff;border:1px solid var(--line);border-radius:15px;overflow:hidden}.floor-head{padding:14px 16px;background:#fafbff;border-bottom:1px solid var(--line);display:flex;justify-content:space-between}.floor-head b{font-size:15px}.floor-head span{color:var(--green);font-weight:900}
+.grid{padding:15px;display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:11px}.room{border:1px solid var(--line);border-radius:12px;padding:13px;transition:.15s}.room.free{background:var(--green2);border-color:#bbf7d0}.room.busy{background:#fff}.room:hover{transform:translateY(-2px);box-shadow:0 8px 20px #11182710}.room-top{display:flex;justify-content:space-between;align-items:center}.room-name{font-size:16px;font-weight:950}.pill{font-size:10px;font-weight:900;border-radius:99px;padding:5px 7px}.pill.free{background:#dcfce7;color:#166534}.pill.busy{background:#f3f4f6;color:#6b7280}.meta{color:var(--muted);font-size:11px;margin-top:7px}.next{margin-top:10px;font-size:11px;font-weight:800}.tag{display:inline-block;margin:7px 4px 0 0;background:#fff;border:1px solid var(--line);padding:4px 6px;border-radius:6px;font-size:10px}.empty{padding:20px;color:var(--muted);text-align:center}
+.note{margin-top:18px;font-size:11px;color:var(--muted);line-height:1.6}.badge{font-size:10px;background:var(--blue2);color:#3730a3;border-radius:6px;padding:4px 6px}
+@media(max-width:900px){.side{display:none}.main{margin:0;width:100%;padding:17px}.stats{grid-template-columns:repeat(2,1fr)}.top{flex-direction:column}.clock{text-align:left;width:100%}}
+@media(max-width:520px){.stats{grid-template-columns:1fr 1fr}.search{flex-direction:column}.search button{height:44px}.grid{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<div class="app">
+<aside class="side">
+  <div class="brand">Free<span>Class</span></div>
+  <div class="nav">
+    <button class="active">Room Finder</button>
+    <button>Floor Grid</button>
+    <button>Timetable</button>
+  </div>
+</aside>
+
+<main class="main">
+  <div class="top">
+    <div><div class="eyebrow">Campus utility</div><h1>Find an empty classroom</h1><p>See which rooms are free now — without walking floor to floor.</p></div>
+    <div class="clock"><b id="time">--:--</b><span id="date">Loading…</span></div>
+  </div>
+
+  <section class="ai">
+    <h2>✦ AI Room Finder</h2>
+    <p>Describe what you need naturally. The parser extracts floor, AC, team size and duration, then checks every timetable slot.</p>
+    <div class="search">
+      <input id="query" placeholder='Try: “I need an AC room on the ground floor for my team for the next 2 hours.”'>
+      <button onclick="runAI()">Find rooms</button>
+    </div>
+    <div class="chips">
+      <button class="chip" onclick="fill('AC room on the ground floor for 2 hours')">AC · Ground · 2h</button>
+      <button class="chip" onclick="fill('quiet room for 4 people for 90 minutes')">Quiet · 4 people · 90m</button>
+      <button class="chip" onclick="fill('room on first floor for 1 hour')">First floor · 1h</button>
+    </div>
+    <div class="ai-result" id="aiResult"></div>
+  </section>
+
+  <div class="controls">
+    <div class="control"><label>Floor</label><select id="floor" onchange="render()"><option value="all">All floors</option><option value="Ground">Ground</option><option value="First">First</option><option value="Second">Second</option><option value="Third">Third</option></select></div>
+    <div class="control"><label>Minimum duration</label><select id="duration" onchange="render()"><option value="0">Right now</option><option value="60">1+ hour</option><option value="90">90+ min</option><option value="120">2+ hours</option></select></div>
+    <div class="control"><label>Type</label><select id="type" onchange="render()"><option value="all">All rooms</option><option value="ac">AC only</option><option value="quiet">Quiet / study</option></select></div>
+    <div class="control"><label>Search</label><input id="roomSearch" oninput="render()" placeholder="Room number…"></div>
+  </div>
+
+  <div class="stats">
+    <div class="stat"><small>Empty now</small><b class="green" id="freeCount">0</b></div>
+    <div class="stat"><small>Occupied now</small><b id="busyCount">0</b></div>
+    <div class="stat"><small>Available for 2h+</small><b class="blue" id="longCount">0</b></div>
+    <div class="stat"><small>Rooms tracked</small><b id="totalCount">0</b></div>
+  </div>
+
+  <div class="section-head"><h2>Floor-by-floor availability</h2><span id="statusText">Checking timetable…</span></div>
+  <div id="floors"></div>
+  <div class="note"><b>Data note:</b> Room/timetable records are based on the timetable dataset available in your project. AC/capacity/quiet-room attributes are editable metadata in the <code>ROOMS</code> object below. If your source timetable has official room facilities, replace those fields and the finder will immediately use them.</div>
+</main>
+</div>
+
+<script>
+const DAYS=["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"];
+const PERIODS=[
+  ["09:00","09:50"],["09:50","10:40"],["10:50","11:40"],["11:40","12:30"],
+  ["12:30","13:20"],["13:20","14:10"],["14:10","15:00"],["15:10","16:00"],["16:00","16:50"]
+];
+
+/* Room metadata + the timetable room occurrences found in the supplied project dataset.
+   Change floor/ac/capacity here if your official room list differs. */
+const ROOMS=[
+ {id:"G-401",floor:"Ground",ac:true,capacity:60,quiet:true,events:[["II-ECE-DS B",2,6],["II-ECE-DS B",2,9],["III-ECE-B",1,1]]},
+ {id:"G-602",floor:"Ground",ac:true,capacity:60,quiet:true,events:[["II-ECE-DS A",1,7],["II-ECE-DS A",2,6],["II-ECE-DS A",3,7],["II-ECE-DS A",3,7],["II-ECE-DS B",1,7],["III-ECE-A",1,7],["III-ECE-A",2,7],["III-ECE-B",2,1],["III-ECE-B",3,1],["III-ECE-C",3,9],["III-ECE-C",5,7]]},
+ {id:"G-625",floor:"Ground",ac:true,capacity:70,quiet:true,events:[["III-BME",1,1],["III-BME",2,2],["III-ECE-A",1,7],["III-ECE-A",2,7],["III-ECE-B",2,1],["III-ECE-B",3,1],["III-ECE-B",5,6],["III-ECE-C",3,9],["III-ECE-C",5,7]]},
+ {id:"H-TB-106",floor:"First",ac:true,capacity:80,quiet:true,events:[["II-ECE-DS A",2,9],["II-ECE-DS A",3,6],["II-ECE-DS B",4,1],["II-ECE-DS B",5,1],["III-ECE-A",2,1],["III-ECE-C",3,1]]},
+ {id:"I-108",floor:"First",ac:false,capacity:50,quiet:true,events:[["III-BME",4,3],["III-BME",5,1]]},
+ {id:"LAB-108/107",floor:"First",ac:true,capacity:60,quiet:false,events:[["III-ECE-B",2,7],["III-ECE-B",4,8],["III-ECE-C",2,7],["III-ECE-C",5,9]]},
+ {id:"LAB-108/309",floor:"First",ac:true,capacity:60,quiet:false,events:[["III-BME",1,3],["III-ECE-A",3,9],["III-ECE-A",4,7],["III-ECE-B",1,1],["III-ECE-B",4,1],["III-ECE-C",5,9]]},
+ {id:"LAB-309/107",floor:"Third",ac:true,capacity:55,quiet:false,events:[["II-ECE-DS A",1,9],["II-ECE-DS A",4,6],["II-ECE-DS B",1,4],["II-ECE-DS B",2,1],["II-ECE-DS A",4,6]]},
+ {id:"MPMC LAB-107",floor:"First",ac:true,capacity:45,quiet:false,events:[["III-BME",1,3]]},
+ {id:"BIO DSP LAB-108",floor:"First",ac:true,capacity:45,quiet:false,events:[["III-BME",2,1]]}
+];
+
+function nowInfo(){
+ const d=new Date();
+ const day=d.getDay(), mins=d.getHours()*60+d.getMinutes();
+ let p=-1;
+ PERIODS.forEach((x,i)=>{const a=hm(x[0]),b=hm(x[1]);if(mins>=a&&mins<b)p=i;});
+ return {d,day,mins,p};
+}
+function hm(s){const [h,m]=s.split(":").map(Number);return h*60+m}
+function eventAt(room,day,p){
+ return room.events.filter(e=>e[1]===day&&e[2]===p);
+}
+function freeNow(room){
+ const n=nowInfo();
+ if(n.p<0 || n.day===0 || n.day===6)return true;
+ return eventAt(room,n.day,n.p).length===0;
+}
+function freeMinutes(room){
+ const n=nowInfo();
+ if(n.day===0||n.day===6)return 24*60-n.mins;
+ let end=PERIODS[n.p]?.[1]?hm(PERIODS[n.p][1]):n.mins;
+ if(n.p<0){
+   const next=PERIODS.find(x=>hm(x[0])>n.mins);
+   if(!next)return 0;
+   return hm(next[0])-n.mins;
+ }
+ let total=Math.max(0,end-n.mins);
+ for(let p=n.p+1;p<PERIODS.length;p++){
+   if(eventAt(room,n.day,p).length)break;
+   total+=hm(PERIODS[p][1])-hm(PERIODS[p][0]);
+ }
+ return total;
+}
+function fmtDur(m){return m>=60?Math.floor(m/60)+"h"+(m%60?` ${m%60}m`:""):m+"m"}
+function esc(s){return s.replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]))}
+
+function render(){
+ const floor=document.getElementById("floor").value, dur=+document.getElementById("duration").value, type=document.getElementById("type").value, q=document.getElementById("roomSearch").value.toLowerCase();
+ const free=ROOMS.filter(freeNow), long=ROOMS.filter(r=>freeNow(r)&&freeMinutes(r)>=120);
+ document.getElementById("freeCount").textContent=free.length;
+ document.getElementById("busyCount").textContent=ROOMS.length-free.length;
+ document.getElementById("longCount").textContent=long.length;
+ document.getElementById("totalCount").textContent=ROOMS.length;
+ document.getElementById("statusText").textContent=`Updated ${new Date().toLocaleTimeString([], {hour:"2-digit",minute:"2-digit"})}`;
+
+ const floors=["Ground","First","Second","Third"].filter(f=>floor==="all"||f===floor);
+ let out="";
+ for(const f of floors){
+   let rs=ROOMS.filter(r=>r.floor===f&&r.id.toLowerCase().includes(q));
+   if(type==="ac")rs=rs.filter(r=>r.ac);
+   if(type==="quiet")rs=rs.filter(r=>r.quiet);
+   if(dur)rs=rs.filter(r=>freeNow(r)&&freeMinutes(r)>=dur);
+   if(!rs.length)continue;
+   const n=rs.filter(freeNow).length;
+   out+=`<section class="floor"><div class="floor-head"><b>${f} Floor</b><span>${n} free now</span></div><div class="grid">`;
+   rs.forEach(r=>{
+     const free=freeNow(r), mins=freeMinutes(r);
+     const events=free?[]:eventAt(r,nowInfo().day,nowInfo().p);
+     out+=`<div class="room ${free?"free":"busy"}"><div class="room-top"><div class="room-name">${r.id}</div><span class="pill ${free?"free":"busy"}">${free?"FREE":"OCCUPIED"}</span></div><div class="meta">${r.ac?"❄ AC":"• Non-AC"} · ${r.capacity} seats · ${r.quiet?"Quiet":"Lab/active"}</div><div class="next">${free?(mins?`Free for ~${fmtDur(mins)}`:"Free now"):(events.length?`In use: ${esc(events[0][0])}`:"In use")}</div><span class="tag">${r.capacity>=60?"Team friendly":"Small team"}</span>${r.quiet?'<span class="tag">Study friendly</span>':""}</div>`;
+   });
+   out+="</div></section>";
+ }
+ document.getElementById("floors").innerHTML=out||`<div class="empty">No rooms match these filters.</div>`;
+}
+function fill(x){document.getElementById("query").value=x;runAI()}
+function parseQuery(q){
+ const s=q.toLowerCase();
+ let floor=null;
+ if(/ground|g\.?\s*floor|ground floor/.test(s))floor="Ground";
+ else if(/first|1st/.test(s))floor="First";
+ else if(/second|2nd/.test(s))floor="Second";
+ else if(/third|3rd/.test(s))floor="Third";
+ const ac=/\bac\b|air[- ]?condition/.test(s);
+ const quiet=/quiet|study|work|project/.test(s);
+ const people=(s.match(/(?:for|with|team of)\s+(\d+)\s*(?:people|students|members)?/)||[])[1];
+ let duration=0;
+ const h=(s.match(/(\d+(?:\.\d+)?)\s*(?:hours?|hrs?)/)||[])[1];
+ const m=(s.match(/(\d+)\s*(?:minutes?|mins?)/)||[])[1];
+ if(h)duration=Math.round(+h*60);
+ if(m)duration=Math.max(duration,+m);
+ if(/next 2 hours|two hours/.test(s))duration=120;
+ if(!duration)duration=0;
+ return {floor,ac,quiet,people:people?+people:null,duration};
+}
+function runAI(){
+ const q=document.getElementById("query").value.trim();
+ if(!q)return;
+ const x=parseQuery(q);
+ let matches=ROOMS.filter(r=>freeNow(r));
+ if(x.floor)matches=matches.filter(r=>r.floor===x.floor);
+ if(x.ac)matches=matches.filter(r=>r.ac);
+ if(x.quiet)matches=matches.filter(r=>r.quiet);
+ if(x.people)matches=matches.filter(r=>r.capacity>=x.people);
+ if(x.duration)matches=matches.filter(r=>freeMinutes(r)>=x.duration);
+ const result=document.getElementById("aiResult");
+ const constraints=[];
+ if(x.floor)constraints.push(x.floor+" floor"); if(x.ac)constraints.push("AC"); if(x.quiet)constraints.push("quiet"); if(x.people)constraints.push(x.people+"+ seats"); if(x.duration)constraints.push(fmtDur(x.duration));
+ result.className="ai-result show";
+ result.innerHTML=`<div><strong>Understood:</strong> ${constraints.length?esc(constraints.join(" · ")):"any room"} · checking current timetable availability.</div>`+
+   (matches.length?`<div>${matches.map(r=>`<span class="ai-room">✓ ${r.id} · ${fmtDur(freeMinutes(r))} free</span>`).join("")}</div><div style="margin-top:8px;color:#6b7280;font-size:11px">These rooms satisfy all parsed requirements and are free continuously for the requested duration.</div>`:
+   `<div style="margin-top:8px;color:#b91c1c;font-weight:800">No room satisfies every requirement for the full requested duration right now. Try a shorter duration, another floor, or remove the AC/quiet requirement.</div>`);
+}
+function tick(){
+ const d=new Date();
+ document.getElementById("time").textContent=d.toLocaleTimeString([], {hour:"2-digit",minute:"2-digit",second:"2-digit"});
+ document.getElementById("date").textContent=`${DAYS[d.getDay()]}, ${d.toLocaleDateString()}`;
+ render();
+}
+setInterval(tick,1000);tick();
+</script>
+</body>
+</html>
